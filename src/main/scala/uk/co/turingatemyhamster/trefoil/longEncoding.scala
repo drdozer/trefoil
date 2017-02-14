@@ -11,30 +11,30 @@ trait Encoding[A] {
   final def cast[B]: Encoding.Aux[B, To] = this.asInstanceOf[Encoding.Aux[B, To]]
 }
 
-trait GetEncoding[A, B] {
+trait EncodedAs[A, B] {
   def apply(lea: Encoding[A]): B
   def cast[A1](lea: Encoding[A]): Encoding[A1]
 }
 
-object GetEncoding {
-  def apply[A, B](a: Encoding[A])(implicit G: GetEncoding[A, B]): B = G(a)
-  final def cast[A1, A2, B](a: Encoding[A1])(implicit G: GetEncoding[A1, B]): Encoding.Aux[A2, B] =
+object EncodedAs {
+  def apply[A, B](a: Encoding[A])(implicit G: EncodedAs[A, B]): B = G(a)
+  final def cast[A1, A2, B](a: Encoding[A1])(implicit G: EncodedAs[A1, B]): Encoding.Aux[A2, B] =
     a.asInstanceOf[Encoding.Aux[A1, B]].cast[A2]
 
-  def leg[A, B]: GetEncoding[A, B] = new GetEncoding[A, B] {
+  def leg[A, B]: EncodedAs[A, B] = new EncodedAs[A, B] {
     override def apply(lea: Encoding[A]): B = lea.apply.asInstanceOf[B] // eugh!
     override def cast[A1](lea: Encoding[A]): Encoding[A1] = lea.cast[A1]
   }
 
   // The mapping from DSL types to implementation types
-  implicit val Iri: GetEncoding[RdfCore.Iri, Long] = leg
-  implicit val BNode: GetEncoding[RdfCore.BNode, Long] = leg
-  implicit val Literal: GetEncoding[RdfCore.Literal, Long] = leg
-  implicit val Subject: GetEncoding[RdfCore.Subject, Long] = leg
-  implicit val Predicate: GetEncoding[RdfCore.Predicate, Long] = leg
-  implicit val Object: GetEncoding[RdfCore.Object, Long] = leg
-  implicit val GraphName: GetEncoding[RdfCore.GraphName, Long] = leg
-  implicit val Triple: GetEncoding[RdfCore.Triple, LongEncodedTriple] = leg
+  implicit val Iri: EncodedAs[RdfCore.Iri, Long] = leg
+  implicit val BNode: EncodedAs[RdfCore.BNode, Long] = leg
+  implicit val Literal: EncodedAs[RdfCore.Literal, Long] = leg
+  implicit val Subject: EncodedAs[RdfCore.Subject, Long] = leg
+  implicit val Predicate: EncodedAs[RdfCore.Predicate, Long] = leg
+  implicit val Object: EncodedAs[RdfCore.Object, Long] = leg
+  implicit val GraphName: EncodedAs[RdfCore.GraphName, Long] = leg
+  implicit val Triple: EncodedAs[RdfCore.Triple, LongEncodedTriple] = leg
 }
 
 object Encoding {
@@ -65,43 +65,43 @@ object Encoding {
       }""")
 
     override def iriAsSubject(iri: Encoding[RdfCore.Iri]): Aux[RdfCore.Subject, Long] =
-      GetEncoding cast iri
+      EncodedAs cast iri
 
     override def bNodeAsSubject(bNode: Encoding[RdfCore.BNode]): Aux[RdfCore.Subject, Long] =
-      GetEncoding cast bNode
+      EncodedAs cast bNode
 
     override def iriAsPredicate(iri: Encoding[RdfCore.Iri]): Aux[RdfCore.Predicate, Long] =
-      GetEncoding cast iri
+      EncodedAs cast iri
 
     override def iriAsObject(iri: Encoding[RdfCore.Iri]): Aux[RdfCore.Object, Long] =
-      GetEncoding cast iri
+      EncodedAs cast iri
 
     override def bNodeAsObject(bNode: Encoding[RdfCore.BNode]): Aux[RdfCore.Object, Long] =
-      GetEncoding cast bNode
+      EncodedAs cast bNode
 
     override def literalAsObject(literal: Encoding[RdfCore.Literal]): Aux[RdfCore.Object, Long] =
-      GetEncoding cast literal
+      EncodedAs cast literal
 
     override def iriAsGraphName(iri: Encoding[RdfCore.Iri]): Aux[RdfCore.GraphName, Long] =
-      GetEncoding cast iri
+      EncodedAs cast iri
 
     override def bNodeAsGraphName(bNode: Encoding[RdfCore.BNode]): Aux[RdfCore.GraphName, Long] =
-      GetEncoding cast bNode
+      EncodedAs cast bNode
 
     override def triple(subject: Encoding[RdfCore.Subject],
                         predicate: Encoding[RdfCore.Predicate],
                         `object`: Encoding[RdfCore.Object]): Aux[RdfCore.Triple, LongEncodedTriple] =
-      Encoding encode LongEncodedTriple(GetEncoding(subject), GetEncoding(predicate), GetEncoding(`object`))
+      Encoding encode LongEncodedTriple(EncodedAs(subject), EncodedAs(predicate), EncodedAs(`object`))
 
     override def quad(subject: Encoding[RdfCore.Subject],
                       predicate: Encoding[RdfCore.Predicate],
                       `object`: Encoding[RdfCore.Object],
                       graph: Encoding[RdfCore.GraphName]): Aux[RdfCore.Quad, LongEncodedQuad] =
-      Encoding encode LongEncodedQuad(GetEncoding(subject), GetEncoding(predicate), GetEncoding(`object`), GetEncoding(graph))
+      Encoding encode LongEncodedQuad(EncodedAs(subject), EncodedAs(predicate), EncodedAs(`object`), EncodedAs(graph))
 
     // not sure how to implement these yet
     override def graph(triples: Encoding[RdfCore.Triple]*): Aux[RdfCore.Graph, Set[LongEncodedTriple]] =
-      Encoding encode Set(triples map (t => GetEncoding(t)) :_*)
+      Encoding encode Set(triples map (t => EncodedAs(t)) :_*)
 
     override def dataset(defaultGraph: Encoding[RdfCore.Graph],
                          namedGraphs: Map[Encoding[RdfCore.GraphName], Encoding[RdfCore.Graph]]):
