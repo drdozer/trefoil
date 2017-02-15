@@ -1,3 +1,5 @@
+resolvers += Resolver.sonatypeRepo("releases")
+
 name := "trefoil"
 
 organization := "uk.co.turingatemyhamster"
@@ -32,3 +34,4 @@ scalacOptions ++= Seq(
   "-Ywarn-value-discard"
 )
 
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")

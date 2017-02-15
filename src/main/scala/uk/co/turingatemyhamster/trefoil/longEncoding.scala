@@ -5,12 +5,6 @@ import scorex.crypto.hash.Blake2b256
 case class LongEncodedTriple(subject: Long, predicate: Long, `object`: Long)
 case class LongEncodedQuad(subject: Long, predicate: Long, `object`: Long, graph: Long)
 
-trait Encoding[A] {
-  type To
-  def apply: To
-  final def cast[B]: Encoding.Aux[B, To] = this.asInstanceOf[Encoding.Aux[B, To]]
-}
-
 trait EncodedAs[A, B] {
   def apply(lea: Encoding[A]): B
   def cast[A1](lea: Encoding[A]): Encoding[A1]
@@ -35,9 +29,22 @@ object EncodedAs {
   implicit val Object: EncodedAs[RdfCore.Object, Long] = leg
   implicit val GraphName: EncodedAs[RdfCore.GraphName, Long] = leg
   implicit val Triple: EncodedAs[RdfCore.Triple, LongEncodedTriple] = leg
+  implicit val Graph: EncodedAs[RdfCore.Graph, Set[LongEncodedTriple]] = leg
+}
+
+trait Encoding[A] {
+  type To
+  def apply: To
+  final def cast[B]: Encoding.Aux[B, To] = this.asInstanceOf[Encoding.Aux[B, To]]
 }
 
 object Encoding {
+
+  implicit def evalEncoding[A, B](implicit A: EncodedAs[A, B]): Eval.AsAux[Encoding, A, B] = new Eval.As[Encoding, A] {
+    type T = B
+
+    override def apply(s: Encoding[A]): B = A(s)
+  }
 
   type Aux[T, To0] = Encoding[T] {
     type To = To0

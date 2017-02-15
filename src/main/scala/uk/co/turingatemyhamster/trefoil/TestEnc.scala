@@ -1,11 +1,16 @@
 package uk.co.turingatemyhamster.trefoil
 
+import Predef.{ArrowAssoc => _, Ensuring => _, println}
+
+import cats.data.{Const, Prod}
+
 /**
   *
   *
   * @author Matthew Pocock
   */
 object TestEnc {
+
   def main(args: Array[String]): Unit = {
     println("Hi Mum")
 
@@ -25,15 +30,26 @@ object TestEnc {
       graph(rodJaneFriends, janeFreddieFriends)
     }
 
-    val objects = rainbowKb[cats.Id]
+    val objects = Eval get rainbowKb[cats.Id]
     println(s"Object model:\n$objects")
 
-    val prettyPrinted = rainbowKb[RdfTagless.appendable].getConst.mkString
+    val prettyPrinted = Eval get rainbowKb[Const[List[String], ?]]
     println(s"Pretty Print:\n$prettyPrinted")
 
-    val longEncoded = rainbowKb[Encoding].apply
+    val longEncoded = Eval get rainbowKb[Encoding]
     println(s"Long encoding:\n$longEncoded")
 
+    type t[X] = Prod[cats.Id, Encoding, X] // have to use this -- see productEncoding for a failing case
+    val someEncoding = Eval.get(rainbowKb[t])
+    println(s"Combined encoding:\n$someEncoding")
 
+    // using the Product type directly fails -- see t[X] above for type-alias that works(ish)
+//    val productEncoding = Eval.get(rainbowKb[Prod[cats.Id, Encoding, ?]](RdfTagless.fromU2[cats.Id, Encoding]))
+//    println(s"Combined encoding:\n$productEncoding")
+
+    // fixme: Doesn't work - ?Rep[?S] isn't currying at all here for the nested case
+//    type u[X] = Prod[Const[List[String], ?], t, X]
+//    val allEncoding = Eval.get(rainbowKb[u])
+//    println(s"Combined encoding:\n$allEncoding")
   }
 }
