@@ -217,7 +217,11 @@ sealed trait RdfProperties[Rep[_]] {
 
 }
 
+<<<<<<< HEAD
 object RdfTagless extends RdfTagless_LowPriority /* with RdfTagless_LowLowPriority */ {
+=======
+object RdfTagless extends RdfTagless_LowPriority {
+>>>>>>> a5723e10ab7e181fb661f297a5681dc5aa59e796
 
   implicit object IdTagless extends RdfTagless[Id] {
     override def iri(toString: String): Id[Iri] = Iri(toString)
@@ -277,7 +281,11 @@ object RdfTagless extends RdfTagless_LowPriority /* with RdfTagless_LowLowPriori
 
   }
 
+<<<<<<< HEAD
   implicit object PrettyPrintTagless extends RdfTagless[[X] => Const[List[String], X]] {
+=======
+  implicit object PrettyPrintTagless extends RdfTagless[Const[List[String], ?]] {
+>>>>>>> a5723e10ab7e181fb661f297a5681dc5aa59e796
     override def iri(toString: String): Const[List[String], Iri] =
       Const(s"<$toString>" :: Nil)
 
@@ -336,6 +344,7 @@ object RdfTagless extends RdfTagless_LowPriority /* with RdfTagless_LowLowPriori
   }
 }
 
+<<<<<<< HEAD
 trait TaglessAux2[F[_[_], _[_], _], R1[_], R2[_]] {
   type R[T] = F[R1, R2, T]
 
@@ -356,6 +365,12 @@ trait RdfTagless_LowPriority {
 
   implicit def prodTagless[R1[_], R2[_]](implicit t1: RdfTagless[R1], t2: RdfTagless[R2])
   : RdfTagless[[X] => Prod[R1, R2, X]] = new RdfTagless[[X] => Prod[R1, R2, X]] {
+=======
+trait RdfTagless_LowPriority {
+
+  implicit def prodTagless[R1[_], R2[_]](implicit t1: RdfTagless[R1], t2: RdfTagless[R2])
+  : RdfTagless[Prod[R1, R2, ?]] = new RdfTagless[Prod[R1, R2, ?]] {
+>>>>>>> a5723e10ab7e181fb661f297a5681dc5aa59e796
 
     override def iri(toString: String): Prod[R1, R2, Iri] =
       Prod(t1.iri(toString), t2.iri(toString))
